@@ -86,8 +86,8 @@ fn egui_majjikks(model: &mut Model, update: Update){
         ui.add(egui::Slider::new(&mut settings.target_freq, 0.05..=0.2));
         let clicked = ui.button("give em hell").clicked();
         if clicked {
-            model.nijika.phase = random();
-            model.andrew.phase = random();
+            model.nijika.phase = random_range(0., 2.*PI);
+            model.andrew.phase = random_range(0., 2.*PI);
         }
         ui.checkbox(&mut settings.disable_cool_animations, "disable animations (");
     });
@@ -96,7 +96,7 @@ fn egui_majjikks(model: &mut Model, update: Update){
         ui.add(egui::Slider::new(&mut settings.nijika_freq, 0.05..=0.2));
         let clicked = ui.button("throw a cymbal at her").clicked();
         if clicked {
-            model.nijika.phase = random();
+            model.nijika.phase = random_range(0., 2.*PI);
         }
         ui.checkbox(&mut settings.nijika_focus, "focus");
     });
@@ -105,7 +105,7 @@ fn egui_majjikks(model: &mut Model, update: Update){
         ui.add(egui::Slider::new(&mut settings.andrew_freq, 0.05..=0.2));
         let clicked = ui.button("throw a cymbal at him").clicked();
         if clicked {
-            model.andrew.phase = random();
+            model.andrew.phase = random_range(0., 2.*PI);
         }
     });
 }
