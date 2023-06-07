@@ -39,23 +39,20 @@ struct Model{
 }
 impl Model {
     fn update(&mut self, dt: f32) {
-        let koeff = self.settings.koeff;
-        // dPhase of Nijika is half the influence of Andrew and one of Fletcher's  
-        // dPhase of Andrew is the influence of Fletcher  
+        let koeff = self.settings.koeff; // loading the coupling coefficient from the ui
+        // calculate the d\phi / dt
         let dPhase_Andrew = 
-            self.andrew.freq + koeff*(self.fletcher.phase - self.andrew.phase).sin()/3.;
-        
+            koeff*(self.fletcher.phase - self.andrew.phase).sin()/3.; 
         let dPhase_Nijika = 
             if self.settings.nijika_focus{
-                    self.nijika.freq + koeff*((self.fletcher.phase - self.nijika.phase).sin())/3.
+                    koeff*((self.fletcher.phase - self.nijika.phase).sin())/3.
             }
             else{
-                self.nijika.freq + koeff*(0.5*(self.andrew.phase - self.nijika.phase).sin()
+                koeff*(0.5*(self.andrew.phase - self.nijika.phase).sin()
                     + (self.fletcher.phase - self.nijika.phase).sin())/3.
             };
         let rushing_or_dragging: [RushingOrDragging; 2] = [self.nijika.freq, self.andrew.freq].map(|x|
             {
-            // println!("{x} \\ {}", (self.fletcher.freq - x).signum() as i8);
             match (x - self.fletcher.freq).signum() as i8 {
                 1 => {RushingOrDragging::RUSHING},
                 -1 => {RushingOrDragging::DRAGGING},
@@ -63,9 +60,9 @@ impl Model {
             }
             }
         );
-        self.nijika.phase = (self.nijika.phase + dPhase_Nijika*dt)% (2.*PI); 
-        self.andrew.phase = (self.andrew.phase + dPhase_Andrew*dt) % (2.*PI);
-        self.fletcher.phase = (self.fletcher.phase + self.fletcher.freq*dt) % (2.*PI);
+        self.nijika.phase = (self.nijika.phase + dPhase_Nijika*dt + self.nijika.freq)% (2.*PI); 
+        self.andrew.phase = (self.andrew.phase + dPhase_Andrew*dt + self.andrew.freq) % (2.*PI);
+        self.fletcher.phase = (self.fletcher.phase + self.fletcher.freq) % (2.*PI);
         self.rushing_or_dragging = rushing_or_dragging;
     }
 }
@@ -79,9 +76,9 @@ fn egui_majjikks(model: &mut Model, update: Update){
 
     egui::Window::new("global").anchor(egui::Align2::CENTER_TOP, [0., 20.]).show(&ctx, |ui| {
         ui.label("Δt:");
-        ui.add(egui::Slider::new(&mut settings.dt, 0.0..=4.));
+        ui.add(egui::Slider::new(&mut settings.dt, 0.0..=2.));
         ui.label("coupling coefficient:");
-        ui.add(egui::Slider::new(&mut settings.koeff, 0.0..=0.5));
+        ui.add(egui::Slider::new(&mut settings.koeff, 0.0..=2.));
         ui.label("Fletcher's frequency (⌚):");
         ui.add(egui::Slider::new(&mut settings.target_freq, 0.05..=0.2));
         let clicked = ui.button("give em hell").clicked();
@@ -284,7 +281,7 @@ fn model(app: &App) -> Model {
 
     Model{
         settings: Settings {
-            dt: 1.,
+            dt: 0.01,
             koeff: 0.25,
             target_freq,
             andrew_freq: Andrew.freq,
